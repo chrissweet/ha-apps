@@ -1,0 +1,9 @@
+{
+  "name": "laundry-matter",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "@matter/main": "0.18.0"
+  }
+}

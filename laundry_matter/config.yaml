@@ -1,0 +1,29 @@
+name: Laundry Matter sensors
+version: "0.1.0"
+slug: laundry_matter
+description: Washer and dryer as Matter contact sensors for Alexa (closed while running, open when finished)
+url: https://github.com/chrissweet/ha-apps/tree/main/laundry_matter
+arch: [amd64, aarch64]
+startup: application
+boot: auto
+host_network: true
+homeassistant_api: true
+options:
+  appliances:
+    - name: Washer
+      entity: sensor.sem_meter_circuit11_power
+      threshold_w: 15
+      off_delay_min: 5
+      port: 5540
+    - name: Dryer
+      entity: sensor.sem_meter_circuit12_power
+      threshold_w: 50
+      off_delay_min: 10
+      port: 5541
+schema:
+  appliances:
+    - name: str
+      entity: str
+      threshold_w: float
+      off_delay_min: float
+      port: port
