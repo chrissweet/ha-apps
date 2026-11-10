@@ -1,5 +1,5 @@
 name: Laundry Matter sensors
-version: "0.1.0"
+version: "0.1.1"
 slug: laundry_matter
 description: Washer and dryer as Matter contact sensors for Alexa (closed while running, open when finished)
 url: https://github.com/chrissweet/ha-apps/tree/main/laundry_matter
