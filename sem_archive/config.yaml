@@ -1,5 +1,5 @@
 name: SEM archive
-version: "0.1.0"
+version: "0.1.1"
 slug: sem_archive
 description: Keep every SEM-Meter MQTT message, raw, in hourly compressed files in /share/sem
 url: https://github.com/chrissweet/ha-apps/tree/main/sem_archive

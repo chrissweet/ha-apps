@@ -30,6 +30,10 @@ NTP_SERVERS = ["time.cloudflare.com", "time.nist.gov", "time-nw.nist.gov"]
 NTP_EPOCH = 2208988800  # seconds from 1900-01-01 to 1970-01-01
 
 
+def log(text):
+    print(f"{datetime.now(timezone.utc).isoformat(timespec='seconds')} {text}", flush=True)
+
+
 def now_iso():
     return datetime.now(timezone.utc).isoformat(timespec="microseconds")
 
@@ -62,6 +66,7 @@ class Archive:
         self.configs = {}  # topic -> payload (latest)
         self.key = None
         self.f = None
+        self.counts = {}  # type -> lines written to the current file
 
     def _key(self):
         n = datetime.now(timezone.utc)
@@ -73,12 +78,21 @@ class Archive:
     def _write(self, obj):
         self.f.write(json.dumps(obj, separators=(",", ":")) + "\n")
         self.f.flush()
+        self.counts[obj["type"]] = self.counts.get(obj["type"], 0) + 1
+        if obj["type"] in ("status", "clock"):
+            log(f"{obj['type']}: " + json.dumps({k: v for k, v in obj.items() if k not in ("t", "type")}))
+
+    def report(self):
+        with self.lock:
+            log(f"file {self._path(self.key)}: {self.counts}")
 
     def _open(self, key):
         path = self._path(key)
         os.makedirs(os.path.dirname(path), exist_ok=True)
         self.f = open(path, "a", encoding="utf-8")
         self.key = key
+        self.counts = {}
+        log(f"writing {path}")
         t = now_iso()
         for topic, payload in sorted(self.configs.items()):
             self._write({"t": t, "type": "config", "topic": topic, "payload": payload, "snapshot": True})
@@ -95,6 +109,7 @@ class Archive:
         self._open(key)
         if old:
             compress(self._path(old))
+            log(f"compressed {self._path(old)}.xz")
 
     def write(self, obj):
         with self.lock:
@@ -182,7 +197,7 @@ def main():
     config_prefix = f"homeassistant/sensor/{serial}_"
 
     def on_connect(client, userdata, flags, reason, props):
-        arc.write({"t": now_iso(), "type": "status", "event": "connect", "detail": str(reason)})
+        arc.write({"t": now_iso(), "type": "status", "event": "connect", "detail": f"{reason} as {client_id}"})
         client.subscribe([("SEMMETER/#", 0), ("homeassistant/sensor/+/config", 0)])
 
     def on_disconnect(client, userdata, flags, reason, props):
@@ -196,7 +211,9 @@ def main():
         else:
             arc.write({"t": now_iso(), "type": "msg", "topic": m.topic, "payload": payload})
 
-    client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2, client_id="sem_archive")
+    # client id must be unique per broker: a second client with the same id kicks the first off
+    client_id = f"sem_archive-{socket.gethostname()}"
+    client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2, client_id=client_id)
     if user:
         client.username_pw_set(user, password)
     client.on_connect, client.on_disconnect, client.on_message = on_connect, on_disconnect, on_message
@@ -207,8 +224,12 @@ def main():
     stop = threading.Event()
     signal.signal(signal.SIGTERM, lambda *a: stop.set())
     signal.signal(signal.SIGINT, lambda *a: stop.set())
+    last_report = time.monotonic()
     while not stop.wait(1):
         arc.tick()
+        if time.monotonic() - last_report >= 600:
+            arc.report()
+            last_report = time.monotonic()
 
     arc.write({"t": now_iso(), "type": "status", "event": "stop", "detail": ""})
     client.loop_stop()
