@@ -6,6 +6,7 @@ Presents each appliance as its own Matter contact sensor, so an Amazon Echo (or 
 - Running: the power entity reads above `threshold_w`. Finished: at or below `threshold_w` for `off_delay_min` since the last reading above it.
 - Power comes from Home Assistant over its websocket (Supervisor token, `homeassistant_api`); no long-lived token is stored.
 - Each appliance is a separate Matter node (own port, own pairing code). Setup codes are random, generated on first start and kept in `/data` with the Matter pairing keys; the state survives restarts, so a restart does not cause a false "finished".
+- Connection watchdog (0.1.2): a connection attempt must log in within 30 s, and a ping every 60 s must be answered within 30 s, or the app reconnects. After a gap longer than 10 minutes it posts a Home Assistant notification giving the times, since alerts in that window were missed.
 - Needs host networking (Matter uses mDNS and UDP).
 
 ## Pairing
