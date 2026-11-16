@@ -3,7 +3,7 @@
 Presents each appliance as its own Matter contact sensor, so an Amazon Echo (or any Matter controller) can use it without an Amazon login in Home Assistant and without Home Assistant Cloud.
 
 - Closed while the appliance runs, open when it has finished or is idle. An Alexa routine on "opens" announces the end; "Alexa, is the washer on?" answers with the contact state.
-- Running: the power entity reads above `threshold_w`. Finished: at or below `threshold_w` for `off_delay_min` since the last reading above it.
+- Running: the power entity reads above `threshold_w`. Finished: the time-weighted mean of the last `mean_s` seconds (60) has stayed at or below `off_w` (defaults to `threshold_w`) for `off_delay_min` since it was last above it.
 - Power comes from Home Assistant over its websocket (Supervisor token, `homeassistant_api`); no long-lived token is stored.
 - Each appliance is a separate Matter node (own port, own pairing code). Setup codes are random, generated on first start and kept in `/data` with the Matter pairing keys; the state survives restarts, so a restart does not cause a false "finished".
 - Connection watchdog (0.1.2): a connection attempt must log in within 30 s, and a ping every 60 s must be answered within 30 s, or the app reconnects. After a gap longer than 10 minutes it posts a Home Assistant notification giving the times, since alerts in that window were missed.
@@ -20,7 +20,9 @@ Start the app and read its log: each unpaired appliance prints a manual pairing 
 | `name` | Device name shown to Alexa |
 | `entity` | Power sensor in watts |
 | `threshold_w` | Above this the appliance is running |
-| `off_delay_min` | Minutes at or below the threshold before it counts as finished |
+| `off_w` | Optional finish level; the 60 s mean must stay at or below it. Defaults to `threshold_w`. Washer 6 W: fill pauses hold 7 to 9 W, off is 0 W |
+| `mean_s` | Optional averaging window for the finish test, seconds (60) |
+| `off_delay_min` | Minutes at or below `off_w` before it counts as finished |
 | `port` | Matter UDP port, one per appliance |
 
 Defaults are for the SEM-Meter washer (circuit 11, 15 W, 5 min: washer pauses at up to 11 W for up to 2.7 min) and dryer (circuit 12, 50 W, 10 min: gaps between heating bursts grow to 4 min near the end).
