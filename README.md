@@ -4,3 +4,4 @@ Add `https://github.com/chrissweet/ha-apps` as an app repository in Home Assista
 
 - [SEM archive](sem_archive): archive every SEM-Meter MQTT message to hourly compressed files.
 - [Laundry Matter sensors](laundry_matter): washer and dryer as Matter contact sensors for Alexa announcements.
+- [State archive](state_archive): archive every state change of chosen entities (temperatures, humidities) to hourly compressed files.

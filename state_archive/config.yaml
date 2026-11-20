@@ -1,0 +1,34 @@
+name: State archive
+version: "0.1.0"
+slug: state_archive
+description: Keep every state change of chosen Home Assistant entities in hourly compressed files in /share/states
+url: https://github.com/chrissweet/ha-apps/tree/main/state_archive
+arch:
+  - amd64
+  - aarch64
+startup: application
+boot: auto
+homeassistant_api: true
+map:
+  - type: share
+    read_only: false
+options:
+  entities:
+    - sensor.basement_thermometer_temperature
+    - sensor.basement_thermometer_humidity
+    - sensor.bedroom_thermometer_temperature
+    - sensor.bedroom_thermometer_humidity
+    - sensor.lounge_thermometer_temperature
+    - sensor.lounge_thermometer_humidity
+    - sensor.garage_thermometer_temperature
+    - sensor.garage_thermometer_humidity
+    - sensor.outside_temperature_temperature
+    - sensor.outside_temperature_humidity
+    - sensor.carri_lite_bedroom_temperature
+    - sensor.carri_lite_bedroom_humidity
+    - sensor.nws_41_579155_86_317059_ksbn_temperature
+    - sensor.nws_41_579155_86_317059_ksbn_relative_humidity
+    - sensor.nws_41_579155_86_317059_ksbn_dew_point
+schema:
+  entities:
+    - str
